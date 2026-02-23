@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { useFieldArray, useForm, useWatch, Controller } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "../../../components/ui/Button";
@@ -262,26 +262,39 @@ export function InvoiceForm() {
 
                     {/* Vendors & Payments */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Select
-              label="Select Vendor *"
-              {...register("vendor_id")}
-              options={vendors.map((v) => ({
-                value: v.id,
-                label: v.name
-              }))}
-              error={errors.vendor_id?.message} />
+                        <Controller
+                            name="vendor_id"
+                            control={control}
+                            render={({ field }) => (
+                                <Select
+                                    label="Select Vendor *"
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    options={vendors.map((v) => ({
+                                        value: v.id,
+                                        label: v.name
+                                    }))}
+                                    error={errors.vendor_id?.message}
+                                />
+                            )}
+                        />
             
-                        <Select
-              label="Payment Method *"
-              {...register("payment_method_id")}
-              options={payments.map((p) => ({
-                value: p.id,
-                label: `${p.name} ${
-                p.is_default ? "(Default)" : ""}`
-
-              }))}
-              error={errors.payment_method_id?.message} />
-            
+                        <Controller
+                            name="payment_method_id"
+                            control={control}
+                            render={({ field }) => (
+                                <Select
+                                    label="Payment Method *"
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    options={payments.map((p) => ({
+                                        value: p.id,
+                                        label: `${p.name} ${p.is_default ? "(Default)" : ""}`
+                                    }))}
+                                    error={errors.payment_method_id?.message}
+                                />
+                            )}
+                        />
                     </div>
 
                     <hr className="border-gray-100 dark:border-gray-800" />

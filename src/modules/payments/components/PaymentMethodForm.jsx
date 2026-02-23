@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
@@ -87,17 +87,24 @@ export function PaymentMethodForm({
           error={errors.name?.message}
           placeholder="e.g. Business Account" />
         
-        <Select
-          label="Payment Type *"
-          {...register("type")}
-          error={errors.type?.message}
-          options={[
-            { value: "bank_transfer", label: "Bank Transfer" },
-            { value: "paypal", label: "PayPal" },
-            { value: "stripe", label: "Stripe" },
-            { value: "payoneer", label: "Payoneer" },
-            { value: "other", label: "Other" },
-          ]}
+        <Controller
+          name="type"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Payment Type *"
+              value={field.value}
+              onValueChange={field.onChange}
+              error={errors.type?.message}
+              options={[
+                { value: "bank_transfer", label: "Bank Transfer" },
+                { value: "paypal", label: "PayPal" },
+                { value: "stripe", label: "Stripe" },
+                { value: "payoneer", label: "Payoneer" },
+                { value: "other", label: "Other" },
+              ]}
+            />
+          )}
         />
       </div>
 
