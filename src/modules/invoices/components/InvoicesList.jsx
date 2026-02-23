@@ -36,16 +36,16 @@ export function InvoicesList() {
                     <Button
             variant="ghost"
             onClick={() => setIsCreating(false)}
-            className="text-gray-500 hover:text-gray-900">
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
             
                         <ArrowLeft className="w-5 h-5 mr-2" />
                         Back to Invoices
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-semibold text-gray-900">
+                        <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
                             Create Invoice
                         </h1>
-                        <p className="mt-1 text-gray-500">
+                        <p className="mt-1 text-gray-500 dark:text-gray-400">
                             Fill out details to generate a new invoice.
                         </p>
                     </div>
@@ -59,10 +59,10 @@ export function InvoicesList() {
     <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-semibold text-gray-900">
+                    <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
                         Invoices
                     </h1>
-                    <p className="mt-1 text-gray-500">
+                    <p className="mt-1 text-gray-500 dark:text-gray-400">
                         View and manage all generated invoices.
                     </p>
                 </div>
@@ -72,7 +72,7 @@ export function InvoicesList() {
                 </Button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -108,7 +108,7 @@ export function InvoicesList() {
 
             invoices.map((invoice) =>
             <TableRow key={invoice.id}>
-                                    <TableCell className="font-medium text-gray-900">
+                                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">
                                         {invoice.invoice_number}
                                     </TableCell>
                                     <TableCell>
@@ -121,7 +121,7 @@ export function InvoicesList() {
                   "MMM dd, yyyy"
                 )}
                                     </TableCell>
-                                    <TableCell className="font-semibold text-gray-900">
+                                    <TableCell className="font-semibold text-gray-900 dark:text-gray-100">
                                         ${Number(invoice.total).toFixed(2)}
                                     </TableCell>
                                     <TableCell className="text-right">

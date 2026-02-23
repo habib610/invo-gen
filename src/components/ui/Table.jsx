@@ -6,10 +6,10 @@ export const Table = forwardRef(
 
 
   ({ className, ...props }, ref) =>
-  <div className="w-full overflow-auto border border-gray-200 rounded-lg">
+  <div className="w-full overflow-auto border border-gray-200 dark:border-gray-800 rounded-lg">
         <table
       ref={ref}
-      className={cn("w-full caption-bottom text-sm", className)}
+      className={cn("w-full caption-bottom text-sm text-gray-900 dark:text-gray-100", className)}
       {...props} />
     
     </div>
@@ -22,7 +22,7 @@ export const TableHeader = forwardRef(
   ({ className, ...props }, ref) =>
   <thead
     ref={ref}
-    className={cn("[&_tr]:border-b bg-gray-50", className)}
+    className={cn("[&_tr]:border-b dark:[&_tr]:border-gray-800 bg-gray-50 dark:bg-gray-900", className)}
     {...props} />
 
 );
@@ -35,7 +35,7 @@ export const TableBody = forwardRef(
   <tbody
     ref={ref}
     className={cn(
-      "[&_tr:last-child]:border-0 divide-y divide-gray-200 bg-white",
+      "[&_tr:last-child]:border-0 divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-950",
       className
     )}
     {...props} />
@@ -50,7 +50,7 @@ export const TableRow = forwardRef(
   <tr
     ref={ref}
     className={cn(
-      "border-b transition-colors hover:bg-gray-50/50 data-[state=selected]:bg-gray-50",
+      "border-b dark:border-gray-800 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-900 data-[state=selected]:bg-gray-50 dark:data-[state=selected]:bg-gray-900",
       className
     )}
     {...props} />
@@ -65,7 +65,7 @@ export const TableHead = forwardRef(
   <th
     ref={ref}
     className={cn(
-      "h-12 px-4 text-left align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0",
+      "h-12 px-4 text-left align-middle font-medium text-gray-500 dark:text-gray-400 [&:has([role=checkbox])]:pr-0",
       className
     )}
     {...props} />

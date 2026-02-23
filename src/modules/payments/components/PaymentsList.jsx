@@ -55,9 +55,27 @@ export function PaymentsList() {
     }
   };
 
-  const handleSubmit = async (
-  data) =>
-  {
+  const formatPaymentDetails = (detailsJson) => {
+    try {
+      const details = JSON.parse(detailsJson);
+      switch (details.type) {
+        case "bank_transfer":
+          return `Bank: ${details.bank_details?.bank_name || "N/A"} (${details.bank_details?.account_no || "N/A"})`;
+        case "paypal":
+          return `PayPal: ${details.paypal_email}`;
+        case "stripe":
+          return `Stripe: ${details.stripe_link}`;
+        case "payoneer":
+          return `Payoneer: ${details.payoneer_email}`;
+        default:
+          return details.other_details || detailsJson;
+      }
+    } catch (e) {
+      return detailsJson;
+    }
+  };
+
+  const handleSubmit = async (data) => {
     setIsSubmitting(true);
     try {
       if (editingPayment) {
@@ -78,10 +96,10 @@ export function PaymentsList() {
     <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-semibold text-gray-900">
+                    <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
                         Payment Methods
                     </h1>
-                    <p className="mt-1 text-gray-500">
+                    <p className="mt-1 text-gray-500 dark:text-gray-400">
                         Manage payment instructions for invoices.
                     </p>
                 </div>
@@ -91,7 +109,7 @@ export function PaymentsList() {
                 </Button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -129,17 +147,17 @@ export function PaymentsList() {
                                     <TableCell className="font-medium">
                                         {payment.name}
                                     </TableCell>
-                                    <TableCell className="max-w-xs truncate text-gray-500">
-                                        {payment.details}
+                                    <TableCell className="max-w-xs truncate text-gray-500 dark:text-gray-400">
+                                        {formatPaymentDetails(payment.details)}
                                     </TableCell>
                                     <TableCell>
                                         {payment.is_default ?
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary-50 text-primary-700">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400">
                                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                                 Default
                                             </span> :
 
-                <span className="text-gray-400">
+                <span className="text-gray-400 dark:text-gray-600">
                                                 -
                                             </span>
                 }
