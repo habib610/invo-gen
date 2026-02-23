@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@plugin "tailwindcss-animate";
 
 @variant dark (&:where(.dark, .dark *));
 
@@ -10,6 +9,7 @@
     --color-primary-600: #16a34a;
     --color-primary-700: #15803d;
 }
+
 
 :root {
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
