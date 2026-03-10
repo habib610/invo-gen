@@ -11,10 +11,12 @@
     },
     "dependencies": {
         "@hookform/resolvers": "^5.2.2",
+        "@radix-ui/react-select": "^2.2.6",
         "@react-pdf/renderer": "^4.3.2",
         "@supabase/supabase-js": "^2.97.0",
         "@tailwindcss/vite": "^4.2.0",
         "autoprefixer": "^10.4.24",
+        "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "date-fns": "^4.1.0",
         "lucide-react": "^0.575.0",

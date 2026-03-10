@@ -72,10 +72,10 @@ export function VendorsList() {
     <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-semibold text-gray-900">
+                    <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
                         Vendors
                     </h1>
-                    <p className="mt-1 text-gray-500">
+                    <p className="mt-1 text-gray-500 dark:text-gray-400">
                         Manage your clients and vendors.
                     </p>
                 </div>
@@ -85,13 +85,13 @@ export function VendorsList() {
                 </Button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
                             <TableHead>Email</TableHead>
-                            <TableHead>Phone</TableHead>
+                            <TableHead>Theme</TableHead>
                             <TableHead className="text-right">
                                 Actions
                             </TableHead>
@@ -120,10 +120,27 @@ export function VendorsList() {
             vendors.map((vendor) =>
             <TableRow key={vendor.id}>
                                     <TableCell className="font-medium">
-                                        {vendor.name}
+                                        <div className="flex items-center gap-3">
+                                            {vendor.logo_url ? (
+                                                <img src={vendor.logo_url} alt={vendor.name} className="w-8 h-8 rounded-full object-cover" />
+                                            ) : (
+                                                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                                                    NA
+                                                </div>
+                                            )}
+                                            {vendor.name}
+                                        </div>
                                     </TableCell>
                                     <TableCell>{vendor.email}</TableCell>
-                                    <TableCell>{vendor.phone || "-"}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="w-4 h-4 rounded-full border border-gray-200 dark:border-gray-700"
+                                                style={{ backgroundColor: vendor.theme_color || '#22c55e' }}
+                                            />
+                                            <span className="text-xs font-mono uppercase text-gray-500">{vendor.theme_color || '#22c55e'}</span>
+                                        </div>
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <Button

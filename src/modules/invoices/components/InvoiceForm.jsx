@@ -1,13 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PDFDownloadLink } from "@react-pdf/renderer";
+import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { useFieldArray, useForm, useWatch, Controller } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { Select } from "../../../components/ui/Select";
+import { supabase } from "../../../lib/supabase";
+import { generateInvoiceNumber } from "../../../lib/utils";
 import {
   Table,
   TableBody,
@@ -31,6 +33,7 @@ const invoiceSchema = z.object({
   vendor_id: z.string().min(1, "Vendor is required"),
   payment_method_id: z.string().min(1, "Payment Method is required"),
   tax_rate: z.number().min(0).max(100),
+  save_to_storage: z.boolean().default(false),
   items: z.
   array(
     z.object({
@@ -66,9 +69,7 @@ export function InvoiceForm() {
   } = useForm({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
-      invoice_number: `INV-${format(new Date(), "yyyyMMdd")}-${Math.floor(
-        Math.random() * 1000
-      )}`,
+      invoice_number: generateInvoiceNumber(),
       invoice_date: format(new Date(), "yyyy-MM-dd"),
       due_date: format(
         new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
@@ -77,6 +78,7 @@ export function InvoiceForm() {
       vendor_id: "",
       payment_method_id: "",
       tax_rate: 0,
+      save_to_storage: false,
       items: [{ description: "", quantity: 1, price: 0 }]
     },
     mode: "onChange"
@@ -133,20 +135,35 @@ export function InvoiceForm() {
         total: item.quantity * item.price
       }));
 
-      await createInvoice(invoiceDataToSave, itemsDataToSave);
+      const newInvoice = await createInvoice(invoiceDataToSave, itemsDataToSave);
 
-      // Prepare data for PDF generation
-      setCreatedInvoiceData({
-        invoice_number: data.invoice_number,
-        invoice_date: data.invoice_date,
-        due_date: data.due_date,
-        subtotal: itemsSubtotal,
-        tax: taxAmount,
-        total: grandTotal,
+      const fullInvoiceData = {
+        ...invoiceDataToSave,
         vendor: selectedVendor,
         payment_method: selectedPayment,
         items: itemsDataToSave
-      });
+      };
+
+      // Handle optional storage upload
+      if (data.save_to_storage) {
+        try {
+          const blob = await pdf(<ElegantInvoiceTemplate data={fullInvoiceData} />).toBlob();
+          const fileName = `invoices/${data.invoice_number}_${Date.now()}.pdf`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('invoices')
+            .upload(fileName, blob);
+
+          if (uploadError) throw uploadError;
+          console.log("Uploaded to storage:", fileName);
+        } catch (storageErr) {
+          console.error("Storage upload failed:", storageErr);
+          // Don't fail the whole process if storage fails
+        }
+      }
+
+      // Prepare data for PDF generation
+      setCreatedInvoiceData(fullInvoiceData);
 
       alert("Invoice created successfully!");
     } catch (err) {
@@ -186,7 +203,7 @@ export function InvoiceForm() {
   return (
     <div className="space-y-8">
             {createdInvoiceData &&
-      <div className="bg-green-50 border border-green-200 text-green-800 p-6 rounded-xl flex items-center justify-between">
+      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-400 p-6 rounded-xl flex items-center justify-between">
                     <div>
                         <h3 className="text-lg font-semibold">
                             Invoice Created!
@@ -217,7 +234,7 @@ export function InvoiceForm() {
 
             <form
         onSubmit={handleSubmit(handleSaveInvoice)}
-        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
         
                 <div className="p-8 space-y-8">
                     {/* Header Section */}
@@ -241,38 +258,51 @@ export function InvoiceForm() {
             
                     </div>
 
-                    <hr className="border-gray-100" />
+                    <hr className="border-gray-100 dark:border-gray-800" />
 
                     {/* Vendors & Payments */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Select
-              label="Select Vendor *"
-              {...register("vendor_id")}
-              options={vendors.map((v) => ({
-                value: v.id,
-                label: v.name
-              }))}
-              error={errors.vendor_id?.message} />
+                        <Controller
+                            name="vendor_id"
+                            control={control}
+                            render={({ field }) => (
+                                <Select
+                                    label="Select Vendor *"
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    options={vendors.map((v) => ({
+                                        value: v.id,
+                                        label: v.name
+                                    }))}
+                                    error={errors.vendor_id?.message}
+                                />
+                            )}
+                        />
             
-                        <Select
-              label="Payment Method *"
-              {...register("payment_method_id")}
-              options={payments.map((p) => ({
-                value: p.id,
-                label: `${p.name} ${
-                p.is_default ? "(Default)" : ""}`
-
-              }))}
-              error={errors.payment_method_id?.message} />
-            
+                        <Controller
+                            name="payment_method_id"
+                            control={control}
+                            render={({ field }) => (
+                                <Select
+                                    label="Payment Method *"
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    options={payments.map((p) => ({
+                                        value: p.id,
+                                        label: `${p.name} ${p.is_default ? "(Default)" : ""}`
+                                    }))}
+                                    error={errors.payment_method_id?.message}
+                                />
+                            )}
+                        />
                     </div>
 
-                    <hr className="border-gray-100" />
+                    <hr className="border-gray-100 dark:border-gray-800" />
 
                     {/* Items Table */}
                     <div>
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-900">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 Line Items
                             </h3>
                             <Button
@@ -291,7 +321,7 @@ export function InvoiceForm() {
                             </Button>
                         </div>
 
-                        <div className="border border-gray-200 rounded-lg overflow-x-auto">
+                        <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -385,7 +415,7 @@ export function InvoiceForm() {
                             
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-right font-medium text-gray-700">
+                                                <TableCell className="text-right font-medium text-gray-700 dark:text-gray-300">
                                                     ${total.toFixed(2)}
                                                 </TableCell>
                                                 <TableCell>
@@ -412,18 +442,29 @@ export function InvoiceForm() {
                         </div>
                     </div>
 
-                    <hr className="border-gray-100" />
+                    <hr className="border-gray-100 dark:border-gray-800" />
 
                     {/* Totals Section */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2 pt-2">
+                            <input
+                                type="checkbox"
+                                id="save_to_storage"
+                                {...register("save_to_storage")}
+                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+                            <label htmlFor="save_to_storage" className="text-sm text-gray-700 dark:text-gray-300">
+                                Save a copy to Supabase Storage
+                            </label>
+                        </div>
+
                         <div className="w-72 space-y-4">
-                            <div className="flex justify-between items-center text-gray-600">
+                            <div className="flex justify-between items-center text-gray-600 dark:text-gray-400">
                                 <span>Subtotal</span>
-                                <span className="font-medium">
+                                <span className="font-medium text-gray-900 dark:text-gray-100">
                                     ${itemsSubtotal.toFixed(2)}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center text-gray-600">
+                            <div className="flex justify-between items-center text-gray-600 dark:text-gray-400">
                                 <div className="flex items-center gap-2">
                                     <span>Tax Rate (%)</span>
                                     <Input
@@ -436,12 +477,12 @@ export function InvoiceForm() {
                     className="w-20 h-8 text-right" />
                   
                                 </div>
-                                <span className="font-medium">
+                                <span className="font-medium text-gray-900 dark:text-gray-100">
                                     ${taxAmount.toFixed(2)}
                                 </span>
                             </div>
-                            <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
-                                <span className="text-lg font-semibold text-gray-900">
+                            <div className="pt-4 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                                <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                     Total Due
                                 </span>
                                 <span className="text-xl font-bold text-primary-600">
@@ -452,8 +493,8 @@ export function InvoiceForm() {
                     </div>
                 </div>
 
-                <div className="bg-gray-50 border-t border-gray-200 p-6 flex items-center justify-between">
-                    <p className="text-sm text-gray-500">
+                <div className="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-800 p-6 flex items-center justify-between">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                         Make sure to double check the details before saving.
                     </p>
                     <div className="flex gap-3">

@@ -1,4 +1,4 @@
-import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { Document, Page, StyleSheet, Text, View, Image } from "@react-pdf/renderer";
 import { format } from "date-fns";
 
 // Register standard fonts if needed, or stick to standard Helvetica.
@@ -144,26 +144,34 @@ const styles = StyleSheet.create({
 
 
 export const ElegantInvoiceTemplate = ({ data }) => {
+  const themeColor = data.vendor?.theme_color || "#16a34a";
+
+  let paymentDetails = null;
+  try {
+    paymentDetails = data.payment_method?.details ? JSON.parse(data.payment_method.details) : null;
+  } catch (e) {
+    paymentDetails = { type: 'other', other_details: data.payment_method?.details };
+  }
+
   return (
     <Document>
-            <Page size="A4" style={styles.page}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <View>
-                        <Text style={styles.title}>INVOICE</Text>
-                        <Text style={styles.subtitle}>
-                            #{data.invoice_number}
-                        </Text>
-                    </View>
-                    <View style={{ alignItems: "flex-end" }}>
-                        <Text style={styles.h3}>{data.vendor.name}</Text>
-                        <Text style={styles.text}>{data.vendor.address}</Text>
-                        <Text style={styles.text}>{data.vendor.email}</Text>
-                        {data.vendor.phone &&
-            <Text style={styles.text}>{data.vendor.phone}</Text>
-            }
-                    </View>
-                </View>
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={[styles.title, { color: themeColor }]}>INVOICE</Text>
+            <Text style={styles.subtitle}>#{data.invoice_number}</Text>
+          </View>
+          <View style={{ alignItems: "flex-end" }}>
+            {data.vendor.logo_url && (
+              <Image src={data.vendor.logo_url} style={styles.logo} />
+            )}
+            <Text style={styles.h3}>{data.vendor.name}</Text>
+            <Text style={styles.text}>{data.vendor.address}</Text>
+            <Text style={styles.text}>{data.vendor.email}</Text>
+            {data.vendor.phone && <Text style={styles.text}>{data.vendor.phone}</Text>}
+          </View>
+        </View>
 
                 {/* Info Rows */}
                 <View style={[styles.row, styles.section]}>
@@ -243,17 +251,45 @@ export const ElegantInvoiceTemplate = ({ data }) => {
                     </View>
                 </View>
 
-                {/* Payment Details */}
-                {data.payment_method &&
-        <View style={styles.paymentSection}>
-                        <Text style={styles.h3}>
-                            Payment Method: {data.payment_method.name}
-                        </Text>
-                        <Text style={styles.text}>
-                            {data.payment_method.details}
-                        </Text>
-                    </View>
-        }
+        {/* Payment Details */}
+        {paymentDetails && (
+          <View style={styles.paymentSection}>
+            <Text style={[styles.h3, { color: themeColor }]}>
+              Payment Method: {data.payment_method.name}
+            </Text>
+
+            {paymentDetails.type === "bank_transfer" && paymentDetails.bank_details && (
+              <View>
+                <Text style={styles.text}><Text style={styles.boldText}>Account Holder:</Text> {paymentDetails.bank_details.account_holder}</Text>
+                <Text style={styles.text}><Text style={styles.boldText}>Account No:</Text> {paymentDetails.bank_details.account_no}</Text>
+                <Text style={styles.text}><Text style={styles.boldText}>Bank Name:</Text> {paymentDetails.bank_details.bank_name}</Text>
+                <Text style={styles.text}><Text style={styles.boldText}>Bank Address:</Text> {paymentDetails.bank_details.bank_address}</Text>
+                {paymentDetails.bank_details.swift_code && (
+                  <Text style={styles.text}><Text style={styles.boldText}>SWIFT/BIC:</Text> {paymentDetails.bank_details.swift_code}</Text>
+                )}
+                {paymentDetails.bank_details.routing_no && (
+                  <Text style={styles.text}><Text style={styles.boldText}>Routing No:</Text> {paymentDetails.bank_details.routing_no}</Text>
+                )}
+              </View>
+            )}
+
+            {paymentDetails.type === "paypal" && (
+              <Text style={styles.text}><Text style={styles.boldText}>PayPal Email:</Text> {paymentDetails.paypal_email}</Text>
+            )}
+
+            {paymentDetails.type === "stripe" && (
+              <Text style={styles.text}><Text style={styles.boldText}>Stripe Payment:</Text> {paymentDetails.stripe_link}</Text>
+            )}
+
+            {paymentDetails.type === "payoneer" && (
+              <Text style={styles.text}><Text style={styles.boldText}>Payoneer Email/ID:</Text> {paymentDetails.payoneer_email}</Text>
+            )}
+
+            {paymentDetails.type === "other" && (
+              <Text style={styles.text}>{paymentDetails.other_details}</Text>
+            )}
+          </View>
+        )}
 
                 {/* Footer */}
                 <Text style={styles.footer}>
